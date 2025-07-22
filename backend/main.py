@@ -1,47 +1,51 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+import requests
 import os
-from huggingface_hub import InferenceClient
 from dotenv import load_dotenv
-from typing import List
 
 load_dotenv()
 
 app = FastAPI()
 
-# 👇 Allow frontend to connect
+# Enable CORS to allow frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Or replace "*" with ["http://localhost:3000"]
+    allow_origins=["*"],  # Replace with your Vercel domain in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ✅ Validate environment key
+# Load Together API Key from environment
 TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
 if not TOGETHER_API_KEY:
     raise ValueError("TOGETHER_API_KEY not found in environment.")
 
-client = InferenceClient(
-    provider="together",
-    api_key=TOGETHER_API_KEY
-)
-
-class ChatRequest(BaseModel):
-    message: str
+MODEL = "mistralai/Mistral-7B-Instruct-v0.1"
 
 @app.post("/chat")
-async def chat(request: ChatRequest):
-    try:
-        completion = client.chat.completions.create(
-            model="mistralai/Mistral-7B-Instruct-v0.3",
-            messages=[
-                {"role": "user", "content": request.message}
+async def chat(request: Request):
+    data = await request.json()
+    user_input = data.get("message", "")
+
+    response = requests.post(
+        "https://api.together.xyz/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {TOGETHER_API_KEY}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": MODEL,
+            "messages": [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": user_input}
             ]
-        )
-        return {"response": completion.choices[0].message.content}
-    except Exception as e:
-        print("Error from Together API:", e)
-        raise HTTPException(status_code=500, detail="Together API call failed")
+        }
+    )
+
+    if response.status_code == 200:
+        reply = response.json()["choices"][0]["message"]["content"]
+        return {"response": reply.strip()}
+    else:
+        return {"response": "Sorry, something went wrong."}

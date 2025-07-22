@@ -1,63 +1,46 @@
-import React, { useState } from 'react';
-import './App.css';
+import { useState } from "react";
+import axios from "axios";
+
+const API_URL = "https://ai-chatbot-fastapi-react-production.up.railway.app/chat"; // Your backend URL
 
 function App() {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
+  const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMessage = { sender: 'You', text: input };
-    setMessages(prev => [...prev, userMessage]);
     setLoading(true);
-
     try {
-      const response = await fetch('https://ai-chatbot-k3wk.onrender.com/chat', {
-        //http://127.0.0.1:8000/chat
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: input }),
-      });
-
-      const data = await response.json();
-      const botMessage = { sender: 'Bot', text: data.response };
-      setMessages(prev => [...prev, botMessage]);
+      const res = await axios.post(API_URL, { message: input });
+      setResponse(res.data.response);
     } catch (err) {
       console.error(err);
-      setMessages(prev => [...prev, { sender: 'Bot', text: 'Error contacting server.' }]);
+      setResponse("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setInput('');
-    setLoading(false);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') sendMessage();
   };
 
   return (
-    <div className="App">
-      <h2>Chat with Mistral-7B</h2>
-      <div className="chat-box">
-        {messages.map((msg, i) => (
-          <div key={i} className={`message ${msg.sender === 'You' ? 'user' : 'bot'}`}>
-            <strong>{msg.sender}:</strong> {msg.text}
-          </div>
-        ))}
-        {loading && <div className="message bot"><strong>Bot:</strong> Typing...</div>}
-      </div>
-      <input
-        type="text"
+    <div style={{ padding: 30 }}>
+      <h1>Chat with AI 🤖</h1>
+      <textarea
+        rows={3}
         value={input}
-        placeholder="Type a message..."
         onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleKeyDown}
+        placeholder="Type your message here..."
+        style={{ width: "100%", marginBottom: "10px" }}
       />
-      <button onClick={sendMessage} disabled={loading}>Send</button>
+      <br />
+      <button onClick={sendMessage} disabled={loading}>
+        {loading ? "Typing..." : "Send"}
+      </button>
+      <div style={{ marginTop: 20 }}>
+        <strong>Bot:</strong>
+        <p>{response}</p>
+      </div>
     </div>
   );
 }

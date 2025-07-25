@@ -8,14 +8,19 @@ load_dotenv()
 
 app = FastAPI()
 
-# Enable CORS to allow frontend access
+# ✅ Replace this with your actual deployed Vercel frontend URL
+origins = ["http://localhost:3000",
+    "https://v0-new-project-06svkqade74.vercel.app/"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with your Vercel domain in production
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Load Together API Key from environment
 TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")

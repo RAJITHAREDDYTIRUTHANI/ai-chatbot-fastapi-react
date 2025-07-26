@@ -17,11 +17,12 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # ← allows all domains
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # ✅ Environment variable for Together API key
 TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")

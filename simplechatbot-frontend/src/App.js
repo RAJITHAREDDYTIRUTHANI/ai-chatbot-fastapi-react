@@ -1,7 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 
-const API_URL = "https://ai-chatbot-fastapi-react-production.up.railway.app/chat"; // Your backend URL
+// ✅ Make sure this matches your deployed Railway backend
+const API_URL = "https://ai-chatbot-fastapi-react-production.up.railway.app/chat";
 
 function App() {
   const [input, setInput] = useState("");
@@ -16,8 +17,14 @@ function App() {
       const res = await axios.post(API_URL, { message: input });
       setResponse(res.data.response);
     } catch (err) {
-      console.error(err);
-      setResponse("Something went wrong. Please try again.");
+      console.error("API Error:", err);
+      if (err.response) {
+        setResponse(`Error ${err.response.status}: ${err.response.data}`);
+      } else if (err.request) {
+        setResponse("No response from server.");
+      } else {
+        setResponse("Request error: " + err.message);
+      }
     } finally {
       setLoading(false);
     }

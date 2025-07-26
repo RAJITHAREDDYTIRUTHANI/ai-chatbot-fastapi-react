@@ -12,19 +12,15 @@ app = FastAPI()
 origins = [
     "http://localhost:3000",
     "https://ai-chatbot-fastapi-react.vercel.app",
-    "https://ai-chatbot-fastapi-git-e6d24a-trajithareddy9121-5842s-projects.vercel.app"  # this is the exact one throwing error
+    "https://ai-chatbot-fastapi-git-e6d24a-trajithareddy9121-5842s-projects.vercel.app"
 ]
-
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    
-
 )
 
 # ✅ Environment variable for Together API key
